@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-sacle=1.0">
+  <title>Chat Online</title>
+  <script type="module">
+    import { io } from 'https://cdn.socket.io/4.3.2/socket.io.esm.min.js';
+
+    const socket = io({
+      auth: {
+        serverOffset: 0
+      }
+    });
+
+    const form = document.getElementById('form');
+    const input = document.getElementById('input');
+    const messages = document.getElementById('messages');
+
+    socket.on('chat message', async (msg, serverOffset) => {
+      const item = `<li>${msg}</li>`
+      messages.insertAdjacentHTML('beforeend', item)
+      socket.auth.serverOffset = serverOffset
+
+      if (!serverOffset) {
+        try {
+          const results = await db.execute({
+            sql: `SELECT id, content FROM messages WHERE id > ?`,
+            args: [socket.handshake.auth.serverOffset ?? 0]
+          })
+
+          results.rows.forEach(row => {
+            socket.emit('chat message', row.content, row.id.toString())
+          })
+        } catch (e) {
+          console.log(e)
+          return
+        }
+      }
+    })
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault()
+
+      if (input.value) {
+        socket.emit('chat message', input.value)
+        input.value = ''
+      }
+    })
+  </script>
+  <style>
+    body {
+      height: 600px;
+    }
+    #chat {
+      border: 1px solid white;
+      border-radius: 4px;
+      overflow: hidden;
+      width: 350px;
+      height: 100%;
+      position: relative;
+      padding: 10px, 0, 10px, 0;
+    }
+    :root {
+      color-scheme: light dark;
+    }
+  </style>
+</head>
+<body>
+  <section id="chat">
+    <ul id="messages">
+    </ul>
+    <form id="form">
+      <input 
+        type="text" 
+        name="input" 
+        id="input" 
+        placeholder="Type a message"
+        autocomplete="off"
+      >
+      <button type="submit">Send</button>
+    </form>
+  </section>
+</body>
+</html>

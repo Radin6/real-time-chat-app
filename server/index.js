@@ -28,43 +28,30 @@ await db.execute(`
 `)
 
 io.on('connection', async (socket) => {
-  console.log('a user has connected')
+  console.log('a user has connected!')
 
-  if (!socket.recovered) {
-    try {
-      const results = await db.execute({
-        sql: `SELECT id, content FROM messages WHERE id > ?`,
-        args: [socket.handshake.auth.serverOffset ?? 0]
-      })
-
-      results.rows.forEach(row => {
-        socket.emit('chat message', row.content, row.id.toString())
-      })
-    } catch (e) {
-      console.log(e)
-    }
-  }
-
-  socket.on('disconnect', ()=> {
-    console.log('a user has disconnected')
+  socket.on('disconnect', () => {
+    console.log('an user has disconnected')
   })
 
   socket.on('chat message', async (msg) => {
-    let result;
-    const username = socket.handshake.auth.username ?? 'anonymous';
+    let result
+    const username = socket.handshake.auth.username ?? 'anonymous'
+    console.log({ username })
     try {
       result = await db.execute({
-        sql: `INSERT INTO messages (content, user) VALUES (:msg, :username)`,
+        sql: 'INSERT INTO messages (content, user) VALUES (:msg, :username)',
         args: { msg, username }
       })
     } catch (e) {
       console.error(e)
       return
     }
+
     io.emit('chat message', msg, result.lastInsertRowid.toString(), username)
   })
 
-  if (!socket.recovered) {
+  if (!socket.recovered) { // <- recuperase los mensajes sin conexión
     try {
       const results = await db.execute({
         sql: 'SELECT id, content, user FROM messages WHERE id > ?',
@@ -75,11 +62,10 @@ io.on('connection', async (socket) => {
         socket.emit('chat message', row.content, row.id.toString(), row.user)
       })
     } catch (e) {
-      console.log(e)
+      console.error(e)
     }
   }
 })
-
 
 
 app.use(logger('dev'));

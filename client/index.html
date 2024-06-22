@@ -16,6 +16,7 @@
       height: 100%;
       position: relative;
       padding: 10px, 0, 10px, 0;
+      margin: auto;
     }
     :root {
       color-scheme: light dark;
@@ -23,7 +24,7 @@
     #form {
       display: flex;
       position: absolute;
-      bottom: 38px;
+      bottom: 0;
       width: 100%;
       height: 40px;
     }
@@ -32,10 +33,22 @@
     }
     #messages {
       overflow-y: auto;
-      height: 90%;
+      height: 500px;
+      margin-right: 10px;
     }
     #messages>li:nth-child(odd) {
       background: #000;
+    }
+    #messages>li {
+      padding: 5px;
+    }
+    #username {
+      margin-left: 10px;
+      color: lightcoral;
+    }
+    #currentUser{
+      margin-left: 10px;
+      color: gray;
     }
   </style>
 </head>
@@ -92,7 +105,7 @@
       const item = 
       `<li>
         <div>${msg}</div>
-        <div style="color: gray">${username}</div>
+        <div id="currentUser">${username}</div>
       </li>`;
       messages.insertAdjacentHTML('beforeend', item);
       socket.auth.serverOffset = serverOffset;
